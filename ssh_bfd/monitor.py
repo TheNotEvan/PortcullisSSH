@@ -71,8 +71,6 @@ class LogMonitor:
                 return []
             inode = os.fstat(self._file.fileno()).st_ino
             if self._inode is not None and inode != self._inode:
-                # We reopened a DIFFERENT file than we last read (rotated while
-                # the handle was closed): our offset belongs to the old file.
                 self.offset = 0
             self._inode = inode
             self._file.seek(self.offset)
@@ -124,6 +122,4 @@ class LogMonitor:
                 for line in lines:
                     yield line
             else:
-                # Only sleep when idle: during a burst, re-poll immediately in
-                # case more lines arrived while we were processing.
                 time.sleep(self.poll_interval)
