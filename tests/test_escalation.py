@@ -13,7 +13,7 @@ class FakeAlerter:
     def __init__(self):
         self.messages = []
 
-    def notify(self, message):
+    def notify(self, message, ip=None):
         self.messages.append(message)
 
 

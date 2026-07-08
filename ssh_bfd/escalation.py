@@ -17,13 +17,14 @@ class EscalationEngine:
     firewall and a fake alerter.
     """
 
-    def __init__(self, whitelist, firewall, blacklist, alerter=None,
+    def __init__(self, whitelist, firewall, blacklist, alerter=None, audit=None,
                  base_block_seconds=86400, block_multiplier=2.0,
                  max_block_seconds=2592000, state_path=None, clock=None):
         self.whitelist = whitelist
         self.firewall = firewall
         self.blacklist = blacklist
         self.alerter = alerter
+        self.audit = audit
         self.base_block_seconds = base_block_seconds
         self.block_multiplier = block_multiplier
         self.max_block_seconds = max_block_seconds
@@ -39,9 +40,13 @@ class EscalationEngine:
         now = now or self._clock()
         ip = detection.ip
 
+        # Every detection is audit-worthy, acted on or not.
+        if self.audit is not None:
+            self.audit.record_detection(detection)
+
         # Gate 1: the whitelist wins every argument. Never act on a listed IP.
         if self.whitelist.is_listed(ip):
-            self._notify(f"whitelisted {ip} hit {detection.level.name}; not acting")
+            self._notify(f"whitelisted {ip} hit {detection.level.name}; not acting", ip)
             return
 
         # Gate 2: escalation-only. Don't re-act at a stage we've already reached
@@ -54,20 +59,22 @@ class EscalationEngine:
         if detection.level == Level.ALERT:
             self._blocks[ip] = {"stage": Level.ALERT, "expires_at": None}
             self._notify(f"ALERT {ip} weighted={detection.weighted_count} "
-                         f"users={sorted(detection.usernames)}")
+                         f"users={sorted(detection.usernames)}", ip)
 
         elif detection.level == Level.RATE_LIMIT:
             self.firewall.rate_limit(ip)
             expires = now + timedelta(seconds=self.base_block_seconds)
             self._blocks[ip] = {"stage": Level.RATE_LIMIT, "expires_at": expires}
-            self._notify(f"RATE-LIMITED {ip} until {expires.isoformat()}")
+            self._audit_action(ip, "rate_limit", now, expires)
+            self._notify(f"RATE-LIMITED {ip} until {expires.isoformat()}", ip)
 
         elif detection.level == Level.BLOCK:
             expires = now + timedelta(seconds=self._block_duration(ip))
             self.firewall.block(ip)
             self.blacklist.record_block(ip, now)  # AFTER reading duration
             self._blocks[ip] = {"stage": Level.BLOCK, "expires_at": expires}
-            self._notify(f"BLOCKED {ip} until {expires.isoformat()}")
+            self._audit_action(ip, "block", now, expires)
+            self._notify(f"BLOCKED {ip} until {expires.isoformat()}", ip)
 
         self._save()
 
@@ -89,7 +96,8 @@ class EscalationEngine:
             if expires is not None and now >= expires:
                 self.firewall.unblock(ip)
                 del self._blocks[ip]
-                self._notify(f"auto-unblocked {ip} (block expired)")
+                self._audit_action(ip, "unblock", now)
+                self._notify(f"auto-unblocked {ip} (block expired)", ip)
                 changed = True
         if changed:
             self._save()
@@ -99,17 +107,20 @@ class EscalationEngine:
     def manual_block(self, ip, now=None, duration_seconds=None):
         now = now or self._clock()
         duration = duration_seconds or self.base_block_seconds
+        expires = now + timedelta(seconds=duration)
         self.firewall.block(ip)
         self.blacklist.record_block(ip, now)
-        self._blocks[ip] = {"stage": Level.BLOCK,
-                            "expires_at": now + timedelta(seconds=duration)}
-        self._notify(f"manually blocked {ip}")
+        self._blocks[ip] = {"stage": Level.BLOCK, "expires_at": expires}
+        self._audit_action(ip, "block", now, expires, operator="manual")
+        self._notify(f"manually blocked {ip}", ip)
         self._save()
 
-    def manual_unblock(self, ip):
+    def manual_unblock(self, ip, now=None):
+        now = now or self._clock()
         self.firewall.unblock(ip)
         self._blocks.pop(ip, None)  # also drop from state, or tick still tracks it
-        self._notify(f"manually unblocked {ip}")
+        self._audit_action(ip, "unblock", now, operator="manual")
+        self._notify(f"manually unblocked {ip}", ip)
         self._save()
 
     def blocked_ips(self):
@@ -117,10 +128,14 @@ class EscalationEngine:
 
     # --- helpers ---
 
-    def _notify(self, message):
+    def _notify(self, message, ip=None):
         logger.info(message)
         if self.alerter is not None:
-            self.alerter.notify(message)
+            self.alerter.notify(message, ip=ip)
+
+    def _audit_action(self, ip, action, now, expires_at=None, operator="auto"):
+        if self.audit is not None:
+            self.audit.record_action(ip, action, now, expires_at, operator)
 
     def _save(self):
         if self.state_path is None:
