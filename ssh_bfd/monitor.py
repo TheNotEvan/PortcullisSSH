@@ -11,6 +11,7 @@ class LogMonitor:
         self.poll_interval = poll_interval
         self._file = None
         self._inode = None
+        self._state_saved = False
 
         if start_at_end:
             try:
@@ -61,6 +62,7 @@ class LogMonitor:
         with open(tmp, 'w') as f:
             json.dump(state, f)
         os.replace(tmp, self.state_path)
+        self._state_saved = True
 
 
     def _read_from_handle(self):
@@ -105,7 +107,10 @@ class LogMonitor:
 
         if self._file is not None:
             new_offset = self._file.tell()
-            if new_offset != self.offset:
+            # Save when the offset moves, and also once on the very first read so
+            # a "start at end" position survives a restart even if nothing was
+            # read yet (otherwise a restart re-skips to the new end).
+            if new_offset != self.offset or not self._state_saved:
                 self.offset = new_offset
                 self._save_state()
         return lines

@@ -1,0 +1,44 @@
+# ssh-bfd configuration. Copy to /etc/ssh-bfd/config.yaml and edit.
+
+# Which auth log to watch. Debian/Ubuntu: /var/log/auth.log
+# RHEL/CentOS: /var/log/secure
+log_path: /var/log/auth.log
+
+# How often to poll the log (seconds).
+poll_interval: 1.0
+
+# Where runtime state lives (block map, blacklist, audit db, read offset).
+state_dir: /var/lib/ssh-bfd
+
+# IPs and CIDR ranges that must NEVER be blocked. The current SSH session's IP
+# is auto-added at startup, and loopback is always protected.
+whitelist:
+  - 203.0.113.0/24      # example: the office range
+  # - 198.51.100.10     # a specific trusted host
+
+detection:
+  window_seconds: 600          # 10-minute sliding window
+  alert_threshold: 3           # weighted failures -> alert admin
+  rate_limit_threshold: 5      # -> rate-limit stage
+  block_threshold: 8           # -> full block
+  invalid_user_weight: 2       # invalid-user attempts count double
+  distinct_users_threshold: 4  # this many usernames from one IP -> attack
+
+escalation:
+  base_block_seconds: 86400     # first block: 24 hours
+  block_multiplier: 2.0         # each repeat offense doubles the duration
+  max_block_seconds: 2592000    # capped at 30 days
+
+firewall:
+  backend: dryrun               # dryrun | iptables  (start with dryrun!)
+  allow_private_blocking: false # true only for lab testing on private ranges
+  max_blocked_ips: 1000
+  chain: SSH_BFD
+  ssh_port: 22
+
+alerts:
+  syslog_enabled: true
+  throttle_seconds: 900         # at most one alert per IP per 15 minutes
+  slack:
+    enabled: false
+    webhook_url: ""             # https://hooks.slack.com/services/...

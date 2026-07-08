@@ -1,0 +1,21 @@
+[Unit]
+Description=SSH brute force detector
+After=network.target sshd.service
+
+[Service]
+Type=simple
+# Root is required for iptables. The tool confines its own writes to state_dir.
+User=root
+ExecStart=/opt/ssh-bfd/venv/bin/python -m ssh_bfd --config /etc/ssh-bfd/config.yaml run
+Restart=on-failure
+RestartSec=5
+
+# Hardening. NOTE: NoNewPrivileges/PrivateNetwork cannot be used because the
+# tool must run iptables against the host network namespace.
+ProtectSystem=strict
+ReadWritePaths=/var/lib/ssh-bfd
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

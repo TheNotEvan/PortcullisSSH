@@ -1,0 +1,10 @@
+Jul  5 11:59:02 web01 sshd[4410]: Accepted publickey for deploy from 203.0.113.20 port 49122 ssh2
+Jul  5 12:00:01 web01 sshd[5501]: Failed password for root from 45.33.32.156 port 51000 ssh2
+Jul  5 12:00:03 web01 sshd[5501]: Failed password for root from 45.33.32.156 port 51004 ssh2
+Jul  5 12:00:06 web01 sshd[5502]: Failed password for invalid user admin from 45.33.32.156 port 51010 ssh2
+Jul  5 12:00:09 web01 sshd[5502]: Invalid user oracle from 45.33.32.156 port 51014
+Jul  5 12:00:12 web01 sshd[5503]: Failed password for invalid user postgres from 45.33.32.156 port 51020 ssh2
+Jul  5 12:00:15 web01 sshd[5503]: Failed password for invalid user test from 45.33.32.156 port 51024 ssh2
+Jul  5 12:00:18 web01 sshd[5504]: error: maximum authentication attempts exceeded for root from 45.33.32.156 port 51030 ssh2 [preauth]
+Jul  5 12:01:00 web01 sshd[5600]: Failed password for user bob from 198.51.100.7 port 40000 ssh2
+Jul  5 12:15:44 web01 sshd[5711]: Accepted password for bob from 198.51.100.7 port 40010 ssh2
