@@ -3,7 +3,7 @@ import logging
 import urllib.request
 from datetime import datetime, timedelta
 
-logger = logging.getLogger("ssh_bfd.alerts")
+logger = logging.getLogger("portcullis.alerts")
 
 
 class LogNotifier:

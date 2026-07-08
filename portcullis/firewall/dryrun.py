@@ -1,9 +1,9 @@
 import ipaddress
 import logging
 
-from ssh_bfd.firewall.base import FirewallBackend
+from portcullis.firewall.base import FirewallBackend
 
-logger = logging.getLogger("ssh_bfd.firewall")
+logger = logging.getLogger("portcullis.firewall")
 
 
 class DryRunBackend(FirewallBackend):

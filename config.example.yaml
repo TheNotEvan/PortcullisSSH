@@ -1,4 +1,4 @@
-# ssh-bfd configuration. Copy to /etc/ssh-bfd/config.yaml and edit.
+# portcullis configuration. Copy to /etc/portcullis/config.yaml and edit.
 
 # Which auth log to watch. Debian/Ubuntu: /var/log/auth.log
 # RHEL/CentOS: /var/log/secure
@@ -8,7 +8,7 @@ log_path: /var/log/auth.log
 poll_interval: 1.0
 
 # Where runtime state lives (block map, blacklist, audit db, read offset).
-state_dir: /var/lib/ssh-bfd
+state_dir: /var/lib/portcullis
 
 # IPs and CIDR ranges that must NEVER be blocked. The current SSH session's IP
 # is auto-added at startup, and loopback is always protected.
@@ -33,7 +33,7 @@ firewall:
   backend: dryrun               # dryrun | iptables  (start with dryrun!)
   allow_private_blocking: false # true only for lab testing on private ranges
   max_blocked_ips: 1000
-  chain: SSH_BFD
+  chain: PORTCULLIS
   ssh_port: 22
 
 alerts:

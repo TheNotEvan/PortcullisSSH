@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "portcullis-ssh"
+version = "0.1.0"
+description = "PortcullisSSH: monitors SSH auth logs and drops the gate on brute-force attackers at the firewall."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "homeperlovich" }]
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+portcullis = "portcullis.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["portcullis*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

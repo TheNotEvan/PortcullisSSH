@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 
-from ssh_bfd.alerts import Alerter, SlackNotifier
-from ssh_bfd.audit import Audit
-from ssh_bfd.detector import Detection, Level
-from ssh_bfd.escalation import EscalationEngine
-from ssh_bfd.firewall.dryrun import DryRunBackend
-from ssh_bfd.reputation import Blacklist, Whitelist
+from portcullis.alerts import Alerter, SlackNotifier
+from portcullis.audit import Audit
+from portcullis.detector import Detection, Level
+from portcullis.escalation import EscalationEngine
+from portcullis.firewall.dryrun import DryRunBackend
+from portcullis.reputation import Blacklist, Whitelist
 
 T0 = datetime(2026, 7, 5, 12, 0, 0)
 ATTACKER = "45.33.32.156"

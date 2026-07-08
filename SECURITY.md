@@ -14,7 +14,7 @@ password guessing pointless. On the server you are protecting:
 - **Prefer a bastion host or VPN** so SSH is not exposed to the whole internet.
 - **Consider 2FA** (e.g. `pam_google_authenticator`).
 
-If you do all of the above, `ssh-bfd` mostly serves to cut log noise and shed the
+If you do all of the above, `portcullis` mostly serves to cut log noise and shed the
 load of automated scanners — which is still worth doing.
 
 ## What brute-force attacks look like in the logs
@@ -33,7 +33,7 @@ error: maximum authentication attempts exceeded for root from 45.33.32.156 ...
 
 Two independent tells: many failures fast, and many *different* usernames
 (`admin`, `oracle`, `postgres`, `test`) — nobody legitimate walks a username list.
-`ssh-bfd` scores both (weighted failure count and distinct-user count).
+`portcullis` scores both (weighted failure count and distinct-user count).
 
 ## Tuning to avoid false positives
 
@@ -65,12 +65,12 @@ slip through, lower them. Tune against your own `report` output, not guesses.
   keep a console session open that does not depend on SSH.
 - **Restart reconciliation** — block expiries persist across restarts, but the tool
   does not currently reconcile its state against pre-existing kernel rules it did
-  not create. Clear stale rules with `iptables -F SSH_BFD` if needed.
+  not create. Clear stale rules with `iptables -F PORTCULLIS` if needed.
 
 ## Alternatives and prior art
 
 - **fail2ban** — the mature, widely deployed tool for this job; regex "jails" over
-  many services. Use it in production. `ssh-bfd` is a from-scratch teaching
+  many services. Use it in production. `portcullis` is a from-scratch teaching
   implementation of the same core ideas.
 - **sshguard**, **CrowdSec** — other production options, the latter with
   crowd-sourced IP reputation.

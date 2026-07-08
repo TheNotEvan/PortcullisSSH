@@ -2,8 +2,8 @@ import os
 
 import pytest
 
-from ssh_bfd.cli import main
-from ssh_bfd.config import Config, ConfigError, load_config
+from portcullis.cli import main
+from portcullis.config import Config, ConfigError, load_config
 
 FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
 ATTACK_LOG = os.path.join(FIXTURES, "attack_sample.log")

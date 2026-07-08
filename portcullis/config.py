@@ -38,7 +38,7 @@ class FirewallConfig:
     backend: str = "dryrun"                # dryrun | iptables
     allow_private_blocking: bool = False
     max_blocked_ips: int = 1000
-    chain: str = "SSH_BFD"
+    chain: str = "PORTCULLIS"
     ssh_port: int = 22
 
 
@@ -59,7 +59,7 @@ class AlertConfig:
 class Config:
     log_path: str = "/var/log/auth.log"
     poll_interval: float = 1.0
-    state_dir: str = "/var/lib/ssh-bfd"
+    state_dir: str = "/var/lib/portcullis"
     whitelist: list = field(default_factory=list)
     detection: DetectionConfig = field(default_factory=DetectionConfig)
     escalation: EscalationConfig = field(default_factory=EscalationConfig)

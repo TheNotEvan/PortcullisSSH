@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from ssh_bfd.reputation import Blacklist, Whitelist
+from portcullis.reputation import Blacklist, Whitelist
 
 T0 = datetime(2026, 7, 5, 12, 0, 0)
 

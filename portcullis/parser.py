@@ -29,39 +29,39 @@ MSG_PATTERNS = [
     (
         EventType.INVALID_USER,
         re.compile(
-            r"^Failed password for invalid user (?P<user>.+?) "
+            r"^Failed password for invalid user (?P<user>.+) "
             r"from (?P<ip>\S+) port (?P<port>\d+)"
         ),
     ),
     (
         EventType.FAILED_PASSWORD,
         re.compile(
-            r"^Failed password for (?P<user>.+?) from (?P<ip>\S+) port (?P<port>\d+)"
+            r"^Failed password for (?P<user>.+) from (?P<ip>\S+) port (?P<port>\d+)"
         ),
     ),
     (
         EventType.INVALID_USER,
         re.compile(
-            r"^Invalid user (?P<user>.+?) from (?P<ip>\S+)(?: port (?P<port>\d+))?"
+            r"^Invalid user (?P<user>.+) from (?P<ip>\S+)(?: port (?P<port>\d+))?"
         ),
     ),
     (
         EventType.ACCEPTED,
         re.compile(
-            r"^Accepted \S+ for (?P<user>.+?) from (?P<ip>\S+) port (?P<port>\d+)"
+            r"^Accepted \S+ for (?P<user>.+) from (?P<ip>\S+) port (?P<port>\d+)"
         ),
     ),
     (
         EventType.AUTH_MAX_EXCEEDED,
         re.compile(
             r"^error: maximum authentication attempts exceeded for "
-            r"(?:invalid user )?(?P<user>.+?) from (?P<ip>\S+) port (?P<port>\d+)"
+            r"(?:invalid user )?(?P<user>.+) from (?P<ip>\S+) port (?P<port>\d+)"
         ),
     ),
     (
         EventType.DISCONNECT_PREAUTH,
         re.compile(
-            r"^Connection (?:closed|reset) by (?:authenticating user (?P<user>.+?) )?"
+            r"^Connection (?:closed|reset) by (?:authenticating user (?P<user>.+) )?"
             r"(?P<ip>\S+) port (?P<port>\d+)"
         ),
     ),
@@ -84,10 +84,12 @@ def parse_line(line: str, now:datetime | None = None) -> AuthEvent | None:
         return None
 
     now = now or datetime.now()
-
+    
     try:
-        ts = datetime.strptime(env.group("ts"), "%b %d %H:%M:%S")
-        ts = ts.replace(year=now.year)
+        # Syslog timestamps have no year; parse with the current year prepended
+        # (strptime without a year is deprecated as of Python 3.14). If that
+        # lands in the future (December log read in January), it was last year.
+        ts = datetime.strptime(f"{now.year} {env.group('ts')}", "%Y %b %d %H:%M:%S")
         if ts > now:
             ts = ts.replace(year=now.year - 1)
     except ValueError:

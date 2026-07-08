@@ -1,9 +1,9 @@
 import pytest
 
-from ssh_bfd.firewall import get_backend
-from ssh_bfd.firewall.base import FirewallBackend
-from ssh_bfd.firewall.dryrun import DryRunBackend
-from ssh_bfd.firewall.iptables import IptablesBackend
+from portcullis.firewall import get_backend
+from portcullis.firewall.base import FirewallBackend
+from portcullis.firewall.dryrun import DryRunBackend
+from portcullis.firewall.iptables import IptablesBackend
 
 
 # --- the ABC contract ---
@@ -91,14 +91,14 @@ def test_iptables_block_builds_correct_command(monkeypatch):
     # NB: 203.0.113.x is a reserved TEST-NET range that ipaddress treats as
     # non-global, so use a genuinely public address here.
     fw.block("45.33.32.156")
-    assert ["-A", "SSH_BFD", "-s", "45.33.32.156", "-j", "DROP"] in commands
+    assert ["-A", "PORTCULLIS", "-s", "45.33.32.156", "-j", "DROP"] in commands
 
 
 def test_iptables_unblock_builds_correct_command(monkeypatch):
     fw = IptablesBackend()
     commands = record_commands(fw, monkeypatch)
     fw.unblock("203.0.113.7")
-    assert ["-D", "SSH_BFD", "-s", "203.0.113.7", "-j", "DROP"] in commands
+    assert ["-D", "PORTCULLIS", "-s", "203.0.113.7", "-j", "DROP"] in commands
 
 
 def test_iptables_refuses_private_ip_by_default(monkeypatch):
@@ -115,7 +115,7 @@ def test_iptables_allows_private_ip_when_configured(monkeypatch):
     commands = record_commands(fw, monkeypatch)
     monkeypatch.setattr(fw, "list_blocked", lambda: set())
     fw.block("192.168.1.50")
-    assert ["-A", "SSH_BFD", "-s", "192.168.1.50", "-j", "DROP"] in commands
+    assert ["-A", "PORTCULLIS", "-s", "192.168.1.50", "-j", "DROP"] in commands
 
 
 def test_iptables_rejects_non_ip(monkeypatch):

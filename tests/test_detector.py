@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
-from ssh_bfd.detector import BruteForceDetector, Level
-from ssh_bfd.parser import AuthEvent, EventType
+from portcullis.detector import BruteForceDetector, Level
+from portcullis.parser import AuthEvent, EventType
 
 T0 = datetime(2026, 7, 5, 12, 0, 0)
 

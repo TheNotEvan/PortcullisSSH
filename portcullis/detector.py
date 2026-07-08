@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from enum import IntEnum
 from dataclasses import dataclass
 from collections import defaultdict, deque
-from ssh_bfd.parser import EventType
+from portcullis.parser import EventType
 
 class Level(IntEnum):
     ALERT = 1

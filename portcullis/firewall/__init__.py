@@ -1,8 +1,8 @@
 """Firewall backend package and factory."""
 
-from ssh_bfd.firewall.base import FirewallBackend
-from ssh_bfd.firewall.dryrun import DryRunBackend
-from ssh_bfd.firewall.iptables import IptablesBackend
+from portcullis.firewall.base import FirewallBackend
+from portcullis.firewall.dryrun import DryRunBackend
+from portcullis.firewall.iptables import IptablesBackend
 
 _BACKENDS = {
     "dryrun": DryRunBackend,

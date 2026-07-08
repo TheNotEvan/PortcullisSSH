@@ -38,10 +38,10 @@ iptables). Structure the project so ~90% of it is testable on Windows:
 ## 1. Project Layout
 
 ```
-ssh_bfd/
-├── ssh_bfd/
+portcullis/
+├── portcullis/
 │   ├── __init__.py
-│   ├── __main__.py          # python -m ssh_bfd → CLI entry
+│   ├── __main__.py          # python -m portcullis → CLI entry
 │   ├── cli.py               # argparse: run, status, block, unblock, test-config
 │   ├── config.py            # load/validate YAML config (dataclasses)
 │   ├── parser.py            # log line → AuthEvent
@@ -67,7 +67,7 @@ ssh_bfd/
 │   ├── test_escalation.py
 │   └── test_firewall_dryrun.py
 ├── config.example.yaml
-├── deploy/ssh-bfd.service   # systemd unit
+├── deploy/portcullis.service   # systemd unit
 ├── README.md
 ├── SECURITY.md              # best practices & mitigation discussion
 └── pyproject.toml
@@ -141,7 +141,7 @@ Continuously tail the log file, robust to rotation, without re-reading lines.
   - size < current offset → file was truncated (copytruncate rotation): reset
     offset to 0.
 - **State persistence:** write `{path, inode, offset}` to a small JSON state file
-  (`/var/lib/ssh-bfd/state.json`) after each batch, so restarts don't re-process
+  (`/var/lib/portcullis/state.json`) after each batch, so restarts don't re-process
   (which would re-block) or miss lines.
 - Optional stretch: a `journalctl -f -u ssh -o short-iso` subprocess source for
   systemd-journal-only hosts. Keep it behind the same source interface.
@@ -191,8 +191,8 @@ detection:
   total_attempts, times_blocked. Repeat offenders can get longer block durations
   (e.g. double each time). Store in the SQLite DB (shared with audit) rather than
   a flat file — you already need SQLite for M7.
-- Manual management via CLI: `ssh-bfd whitelist add 198.51.100.0/24`,
-  `ssh-bfd blacklist show`, etc.
+- Manual management via CLI: `portcullis whitelist add 198.51.100.0/24`,
+  `portcullis blacklist show`, etc.
 
 ---
 
@@ -214,10 +214,10 @@ class FirewallBackend(ABC):
   and what you use to validate detection logic against real logs safely.
 - **iptables** — use a **dedicated chain** so you never touch other rules:
   ```
-  iptables -N SSH_BFD                      (once, at startup; idempotent)
-  iptables -I INPUT -p tcp --dport 22 -j SSH_BFD   (once)
-  iptables -A SSH_BFD -s <ip> -j DROP      (block)
-  iptables -D SSH_BFD -s <ip> -j DROP      (unblock)
+  iptables -N PORTCULLIS                      (once, at startup; idempotent)
+  iptables -I INPUT -p tcp --dport 22 -j PORTCULLIS   (once)
+  iptables -A PORTCULLIS -s <ip> -j DROP      (block)
+  iptables -D PORTCULLIS -s <ip> -j DROP      (unblock)
   ```
   Rate-limit stage: `-m hashlimit` or `-m recent` rule instead of DROP.
   Use `subprocess.run([...], check=True, capture_output=True)` — **always a list
@@ -257,8 +257,8 @@ NORMAL → ALERTED → RATE_LIMITED → BLOCKED → (expiry) → UNBLOCKED/NORMA
   (default 24h; multiplied for repeat offenders, capped at e.g. 30 days).
   A scheduler tick (runs in the main poll loop, no threads needed) unblocks
   expired IPs and logs it.
-- **Manual controls:** `ssh-bfd unblock <ip>` (and optionally
-  `--whitelist` to also whitelist it), `ssh-bfd block <ip>` for manual blocks.
+- **Manual controls:** `portcullis unblock <ip>` (and optionally
+  `--whitelist` to also whitelist it), `portcullis block <ip>` for manual blocks.
 - All state persisted to SQLite so a daemon restart doesn't forget who's blocked
   or when they expire.
 
@@ -288,7 +288,7 @@ Tables:
   'auto' or CLI user; covers blocks, unblocks, manual overrides
 - `ip_reputation(ip, first_seen, last_seen, total_failures, times_blocked, listed)`
 
-`ssh-bfd report [--since 24h]` prints a summary (top attackers, usernames
+`portcullis report [--since 24h]` prints a summary (top attackers, usernames
 targeted, actions taken) for incident review / compliance.
 
 ---
@@ -298,13 +298,13 @@ targeted, actions taken) for incident review / compliance.
 ### CLI (`cli.py`)
 
 ```
-ssh-bfd run [--config /etc/ssh-bfd/config.yaml] [--dry-run] [--once]
-ssh-bfd status                 # blocked IPs, expiries, stats
-ssh-bfd block/unblock <ip>
-ssh-bfd whitelist add/remove/show <ip|cidr>
-ssh-bfd report [--since 24h]
-ssh-bfd test-config            # validate config, test alert channels
-ssh-bfd replay <logfile>       # run detector over a static file (training/demo)
+portcullis run [--config /etc/portcullis/config.yaml] [--dry-run] [--once]
+portcullis status                 # blocked IPs, expiries, stats
+portcullis block/unblock <ip>
+portcullis whitelist add/remove/show <ip|cidr>
+portcullis report [--since 24h]
+portcullis test-config            # validate config, test alert channels
+portcullis replay <logfile>       # run detector over a static file (training/demo)
 ```
 
 `--once` (process available lines and exit) and `replay` make testing and demos
@@ -318,11 +318,11 @@ clear error messages; `test-config` subcommand.
 
 ### Deployment
 
-- `deploy/ssh-bfd.service` systemd unit: `User=root` (needed for iptables),
+- `deploy/portcullis.service` systemd unit: `User=root` (needed for iptables),
   `Restart=on-failure`, hardening directives (`ProtectSystem=strict`,
-  `ReadWritePaths=/var/lib/ssh-bfd`, `NoNewPrivileges` won't work with iptables —
+  `ReadWritePaths=/var/lib/portcullis`, `NoNewPrivileges` won't work with iptables —
   document why).
-- Install: `pipx install .` or venv in `/opt/ssh-bfd`.
+- Install: `pipx install .` or venv in `/opt/portcullis`.
 - **First-run checklist in README:** run in `--dry-run` for 48h, review would-block
   log, add your own IPs/CIDRs to whitelist, then enable enforcement.
 
@@ -346,7 +346,7 @@ clear error messages; `test-config` subcommand.
 - **Unit (Windows-friendly):** parser fixtures, detector with fake clock,
   reputation CIDR matching, escalation transitions, dry-run backend.
 - **Simulation:** a `tests/gen_attack.py` script that writes synthetic attack
-  traffic into a log file in real time; run `ssh-bfd run --dry-run` against it
+  traffic into a log file in real time; run `portcullis run --dry-run` against it
   and watch detections fire. Also simulate rotation (rename the file mid-run)
   to prove M2 works.
 - **Linux integration (WSL2/VM):**
@@ -355,7 +355,7 @@ clear error messages; `test-config` subcommand.
      low thresholds.
   3. From another shell: `for i in $(seq 1 10); do ssh -o PreferredAuthentications=password wronguser@127.0.0.1; done`
      (or better, from a second VM so you're blocking a non-local IP).
-  4. Verify: alert fired → rate limit → block appears in `iptables -L SSH_BFD -n`
+  4. Verify: alert fired → rate limit → block appears in `iptables -L PORTCULLIS -n`
      → connection refused → auto-unblock after configured (short, for testing)
      duration → audit rows present.
   5. Verify self-lockout guard: try to make it block your own session IP.

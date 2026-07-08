@@ -3,9 +3,9 @@ import logging
 import os
 from datetime import datetime, timedelta
 
-from ssh_bfd.detector import Level
+from portcullis.detector import Level
 
-logger = logging.getLogger("ssh_bfd.escalation")
+logger = logging.getLogger("portcullis.escalation")
 
 
 class EscalationEngine:

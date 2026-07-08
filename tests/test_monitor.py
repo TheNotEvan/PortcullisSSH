@@ -2,7 +2,7 @@ import itertools
 import json
 import os
 
-from ssh_bfd.monitor import LogMonitor
+from portcullis.monitor import LogMonitor
 
 
 def write(path, text, mode="w"):

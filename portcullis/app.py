@@ -7,14 +7,14 @@ escalation engine, plus the tick() heartbeat that expires old blocks.
 import os
 import time
 
-from ssh_bfd.alerts import Alerter, LogNotifier, SlackNotifier
-from ssh_bfd.audit import Audit
-from ssh_bfd.detector import BruteForceDetector
-from ssh_bfd.escalation import EscalationEngine
-from ssh_bfd.firewall import get_backend
-from ssh_bfd.monitor import LogMonitor
-from ssh_bfd.parser import parse_line
-from ssh_bfd.reputation import Blacklist, Whitelist
+from portcullis.alerts import Alerter, LogNotifier, SlackNotifier
+from portcullis.audit import Audit
+from portcullis.detector import BruteForceDetector
+from portcullis.escalation import EscalationEngine
+from portcullis.firewall import get_backend
+from portcullis.monitor import LogMonitor
+from portcullis.parser import parse_line
+from portcullis.reputation import Blacklist, Whitelist
 
 
 def _admin_ssh_ip():

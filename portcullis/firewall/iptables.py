@@ -2,20 +2,20 @@ import ipaddress
 import logging
 import subprocess
 
-from ssh_bfd.firewall.base import FirewallBackend
+from portcullis.firewall.base import FirewallBackend
 
-logger = logging.getLogger("ssh_bfd.firewall")
+logger = logging.getLogger("portcullis.firewall")
 
 
 class IptablesBackend(FirewallBackend):
     """Real firewall enforcement via iptables on Linux.
 
-    All rules live in a dedicated chain (default SSH_BFD) so this tool never
+    All rules live in a dedicated chain (default PORTCULLIS) so this tool never
     touches rules it did not create. Requires root; call ensure_chain() once
     at startup before blocking.
     """
 
-    def __init__(self, chain="SSH_BFD", ssh_port=22,
+    def __init__(self, chain="PORTCULLIS", ssh_port=22,
                  allow_private_blocking=False, max_blocked_ips=1000):
         self.chain = chain
         self.ssh_port = ssh_port
@@ -89,7 +89,7 @@ class IptablesBackend(FirewallBackend):
         )
         blocked = set()
         for line in result.stdout.splitlines():
-            # Lines look like: -A SSH_BFD -s 203.0.113.7/32 -j DROP
+            # Lines look like: -A PORTCULLIS -s 203.0.113.7/32 -j DROP
             parts = line.split()
             if "-s" in parts and "DROP" in parts:
                 src = parts[parts.index("-s") + 1]

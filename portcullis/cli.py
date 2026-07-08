@@ -1,13 +1,13 @@
-"""Command-line interface: ssh-bfd <subcommand>."""
+"""Command-line interface: portcullis <subcommand>."""
 
 import argparse
 import logging
 import sys
 
-from ssh_bfd.app import Application, replay
-from ssh_bfd.config import ConfigError, load_config
+from portcullis.app import Application, replay
+from portcullis.config import ConfigError, load_config
 
-DEFAULT_CONFIG = "/etc/ssh-bfd/config.yaml"
+DEFAULT_CONFIG = "/etc/portcullis/config.yaml"
 
 
 def _load(args):
@@ -22,7 +22,7 @@ def cmd_run(args):
     config = _load(args)
     app = Application(config, dry_run=args.dry_run)
     mode = "DRY-RUN" if args.dry_run else config.firewall.backend
-    print(f"ssh-bfd watching {config.log_path} (firewall: {mode}); Ctrl-C to stop")
+    print(f"portcullis watching {config.log_path} (firewall: {mode}); Ctrl-C to stop")
     try:
         app.run(once=args.once)
     except KeyboardInterrupt:
@@ -81,7 +81,8 @@ def cmd_test_config(args):
 
 
 def build_parser():
-    parser = argparse.ArgumentParser(prog="ssh-bfd", description="SSH brute force detector")
+    parser = argparse.ArgumentParser(prog="portcullis",
+                                     description="PortcullisSSH — SSH brute force detector")
     parser.add_argument("--config", default=DEFAULT_CONFIG, help="path to config.yaml")
     sub = parser.add_subparsers(dest="command", required=True)
 
